@@ -296,6 +296,7 @@
                         <th>Customer</th>
                         <th>Licenses</th>
                         <th>Active Users</th>
+                        <th>Copilot chat Users</th>
                         <th>Usage</th>
                         <th>OOB Agents</th>
                         <th>Custom Agents</th>
@@ -327,6 +328,9 @@
                 <label>Copilot 365 Licenses</label>
                 <input type="number" id="newLicenses" placeholder="0">
             </div>
+             <div class="form-group">
+                <label>CopilotChat Users</label>
+                <input type="number" id="ChatUsers" placeholder="0">
             <div class="form-group">
                 <label>Active Users</label>
                 <input type="number" id="newActiveUsers" placeholder="0">
@@ -564,6 +568,7 @@
                 name: name,
                 licenses: parseInt(document.getElementById('newLicenses').value) || 0,
                 activeUsers: parseInt(document.getElementById('newActiveUsers').value) || 0,
+                Copilot Chat usag: parseInt(document.getElementById('Chatusers').value) || 0,
                 oobAgents: parseInt(document.getElementById('newOOBAgents').value) || 0,
                 customAgents: parseInt(document.getElementById('newCustomAgents').value) || 0,
                 connectors: {
