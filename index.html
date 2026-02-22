@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Copilot Progress Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 20px 30px;
+            background: #f5f5f5;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #0078d4;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #106ebe;
+        }
+
+        .btn-success {
+            background: #107c10;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #0e6b0e;
+        }
+
+        .btn-secondary {
+            background: #605e5c;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #484644;
+        }
+
+        .table-container {
+            padding: 30px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th {
+            background: #0078d4;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #edebe9;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        .connector-status {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .connector-status.active {
+            background: #107c10;
+            color: white;
+        }
+
+        .connector-status.inactive {
+            background: #d13438;
+            color: white;
+        }
+
+        .connector-status:hover {
+            transform: scale(1.2);
+        }
+
+        .usage-bar {
+            width: 100%;
+            height: 20px;
+            background: #edebe9;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .usage-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #107c10 0%, #69d669 100%);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .editable {
+            background: #fff4ce;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        .editable:hover {
+            background: #ffe69c;
+        }
+
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #0078d4;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h2 {
+            margin-bottom: 20px;
+            color: #0078d4;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #323130;
+        }
+
+        .connector-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .connector-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f5f5f5;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            color: #605e5c;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #0078d4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Customer Copilot Progress Dashboard</h1>
+            <p>Track Copilot 365 adoption, connectors, and agent deployment across your customers</p>
+        </div>
+
+        <div class="stats" id="statsContainer"></div>
+
+        <div class="controls">
+            <button class="btn btn-primary" onclick="toggleEditMode()">
+                <span id="editModeText">📝 Enable Edit Mode</span>
+            </button>
+            <button class="btn btn-success" onclick="openAddCustomerModal()">➕ Add Customer</button>
+            <button class="btn btn-secondary" onclick="exportData()">💾 Export Data</button>
+            <button class="btn btn-secondary" onclick="importData()">📁 Import Data</button>
+            <input type="file" id="importFile" style="display: none;" accept=".json" onchange="handleImport(event)">
+        </div>
+
+        <div class="table-container">
+            <table id="customerTable">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Licenses</th>
+                        <th>Active Users</th>
+                        <th>Usage</th>
+                        <th>OOB Agents</th>
+                        <th>Custom Agents</th>
+                        <th>Jira</th>
+                        <th>ServiceNow</th>
+                        <th>Salesforce</th>
+                        <th>Confluence</th>
+                        <th>SharePoint</th>
+                        <th>Other</th>
+                        <th>Last Updated</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add Customer Modal -->
+    <div class="modal" id="addCustomerModal">
+        <div class="modal-content">
+            <h2>Add New Customer</h2>
+            <div class="form-group">
+                <label>Customer Name</label>
+                <input type="text" id="newCustomerName" placeholder="Enter customer name">
+            </div>
+            <div class="form-group">
+                <label>Copilot 365 Licenses</label>
+                <input type="number" id="newLicenses" placeholder="0">
+            </div>
+            <div class="form-group">
+                <label>Active Users</label>
+                <input type="number" id="newActiveUsers" placeholder="0">
+            </div>
+            <div class="form-group">
+                <label>Out-of-Box Agents</label>
+                <input type="number" id="newOOBAgents" placeholder="0">
+            </div>
+            <div class="form-group">
+                <label>Custom Agents</label>
+                <input type="number" id="newCustomAgents" placeholder="0">
+            </div>
+            <div class="form-group">
+                <label>Connectors</label>
+                <div class="connector-grid">
+                    <div class="connector-checkbox">
+                        <input type="checkbox" id="newJira"> <label>Jira</label>
+                    </div>
+                    <div class="connector-checkbox">
+                        <input type="checkbox" id="newServiceNow"> <label>ServiceNow</label>
+                    </div>
+                    <div class="connector-checkbox">
+                        <input type="checkbox" id="newSalesforce"> <label>Salesforce</label>
+                    </div>
+                    <div class="connector-checkbox">
+                        <input type="checkbox" id="newConfluence"> <label>Confluence</label>
+                    </div>
+                    <div class="connector-checkbox">
+                        <input type="checkbox" id="newSharePoint"> <label>SharePoint</label>
+                    </div>
+                    <div class="connector-checkbox">
+                        <input type="checkbox" id="newOther"> <label>Other</label>
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-success" onclick="addCustomer()">Add Customer</button>
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let editMode = false;
+        let customers = [];
+
+        // Initialize with sample data
+        function initializeData() {
+            const savedData = localStorage.getItem('copilotCustomers');
+            if (savedData) {
+                customers = JSON.parse(savedData);
+            } else {
+                customers = [
+                    {
+                        id: 1,
+                        name: 'NICE',
+                        licenses: 1000,
+                        activeUsers: 750,
+                        oobAgents: 5,
+                        customAgents: 3,
+                        connectors: {
+                            jira: true,
+                            serviceNow: true,
+                            salesforce: false,
+                            confluence: true,
+                            sharePoint: true,
+                            other: false
+                        },
+                        lastUpdated: new Date().toISOString()
+                    },
+                    {
+                        id: 2,
+                        name: 'Amdocs',
+                        licenses: 500,
+                        activeUsers: 380,
+                        oobAgents: 4,
+                        customAgents: 2,
+                        connectors: {
+                            jira: true,
+                            serviceNow: false,
+                            salesforce: true,
+                            confluence: true,
+                            sharePoint: true,
+                            other: true
+                        },
+                        lastUpdated: new Date().toISOString()
+                    }
+                ];
+                saveData();
+            }
+            renderTable();
+            renderStats();
+        }
+
+        function saveData() {
+            localStorage.setItem('copilotCustomers', JSON.stringify(customers));
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            customers.forEach(customer => {
+                const usage = customer.licenses > 0 ? Math.round((customer.activeUsers / customer.licenses) * 100) : 0;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${customer.name}</strong></td>
+                    <td class="${editMode ? 'editable' : ''}" onclick="editField(${customer.id}, 'licenses')">${customer.licenses}</td>
+                    <td class="${editMode ? 'editable' : ''}" onclick="editField(${customer.id}, 'activeUsers')">${customer.activeUsers}</td>
+                    <td>
+                        <div class="usage-bar">
+                            <div class="usage-fill" style="width: ${usage}%">${usage}%</div>
+                        </div>
+                    </td>
+                    <td class="${editMode ? 'editable' : ''}" onclick="editField(${customer.id}, 'oobAgents')">${customer.oobAgents}</td>
+                    <td class="${editMode ? 'editable' : ''}" onclick="editField(${customer.id}, 'customAgents')">${customer.customAgents}</td>
+                    <td onclick="${editMode ? `toggleConnector(${customer.id}, 'jira')` : ''}">
+                        <span class="connector-status ${customer.connectors.jira ? 'active' : 'inactive'}">
+                            ${customer.connectors.jira ? '✓' : '✗'}
+                        </span>
+                    </td>
+                    <td onclick="${editMode ? `toggleConnector(${customer.id}, 'serviceNow')` : ''}">
+                        <span class="connector-status ${customer.connectors.serviceNow ? 'active' : 'inactive'}">
+                            ${customer.connectors.serviceNow ? '✓' : '✗'}
+                        </span>
+                    </td>
+                    <td onclick="${editMode ? `toggleConnector(${customer.id}, 'salesforce')` : ''}">
+                        <span class="connector-status ${customer.connectors.salesforce ? 'active' : 'inactive'}">
+                            ${customer.connectors.salesforce ? '✓' : '✗'}
+                        </span>
+                    </td>
+                    <td onclick="${editMode ? `toggleConnector(${customer.id}, 'confluence')` : ''}">
+                        <span class="connector-status ${customer.connectors.confluence ? 'active' : 'inactive'}">
+                            ${customer.connectors.confluence ? '✓' : '✗'}
+                        </span>
+                    </td>
+                    <td onclick="${editMode ? `toggleConnector(${customer.id}, 'sharePoint')` : ''}">
+                        <span class="connector-status ${customer.connectors.sharePoint ? 'active' : 'inactive'}">
+                            ${customer.connectors.sharePoint ? '✓' : '✗'}
+                        </span>
+                    </td>
+                    <td onclick="${editMode ? `toggleConnector(${customer.id}, 'other')` : ''}">
+                        <span class="connector-status ${customer.connectors.other ? 'active' : 'inactive'}">
+                            ${customer.connectors.other ? '✓' : '✗'}
+                        </span>
+                    </td>
+                    <td>${new Date(customer.lastUpdated).toLocaleDateString()}</td>
+                    <td>
+                        ${editMode ? `<button class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px;" onclick="deleteCustomer(${customer.id})">Delete</button>` : '-'}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function renderStats() {
+            const totalCustomers = customers.length;
+            const totalLicenses = customers.reduce((sum, c) => sum + c.licenses, 0);
+            const totalActiveUsers = customers.reduce((sum, c) => sum + c.activeUsers, 0);
+            const totalAgents = customers.reduce((sum, c) => sum + c.oobAgents + c.customAgents, 0);
+            const avgUsage = totalLicenses > 0 ? Math.round((totalActiveUsers / totalLicenses) * 100) : 0;
+
+            document.getElementById('statsContainer').innerHTML = `
+                <div class="stat-card">
+                    <h3>Total Customers</h3>
+                    <div class="value">${totalCustomers}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Licenses</h3>
+                    <div class="value">${totalLicenses.toLocaleString()}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Active Users</h3>
+                    <div class="value">${totalActiveUsers.toLocaleString()}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Agents</h3>
+                    <div class="value">${totalAgents}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Avg. Usage</h3>
+                    <div class="value">${avgUsage}%</div>
+                </div>
+            `;
+        }
+
+        function toggleEditMode() {
+            editMode = !editMode;
+            document.getElementById('editModeText').textContent = editMode ? '🔒 Disable Edit Mode' : '📝 Enable Edit Mode';
+            renderTable();
+        }
+
+        function editField(customerId, field) {
+            if (!editMode) return;
+            
+            const customer = customers.find(c => c.id === customerId);
+            const newValue = prompt(`Enter new value for ${field}:`, customer[field]);
+            
+            if (newValue !== null) {
+                customer[field] = field === 'name' ? newValue : parseInt(newValue) || 0;
+                customer.lastUpdated = new Date().toISOString();
+                saveData();
+                renderTable();
+                renderStats();
+            }
+        }
+
+        function toggleConnector(customerId, connector) {
+            if (!editMode) return;
+            
+            const customer = customers.find(c => c.id === customerId);
+            customer.connectors[connector] = !customer.connectors[connector];
+            customer.lastUpdated = new Date().toISOString();
+            saveData();
+            renderTable();
+        }
+
+        function openAddCustomerModal() {
+            document.getElementById('addCustomerModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('addCustomerModal').classList.remove('active');
+        }
+
+        function addCustomer() {
+            const name = document.getElementById('newCustomerName').value;
+            if (!name) {
+                alert('Please enter a customer name');
+                return;
+            }
+
+            const newCustomer = {
+                id: Date.now(),
+                name: name,
+                licenses: parseInt(document.getElementById('newLicenses').value) || 0,
+                activeUsers: parseInt(document.getElementById('newActiveUsers').value) || 0,
+                oobAgents: parseInt(document.getElementById('newOOBAgents').value) || 0,
+                customAgents: parseInt(document.getElementById('newCustomAgents').value) || 0,
+                connectors: {
+                    jira: document.getElementById('newJira').checked,
+                    serviceNow: document.getElementById('newServiceNow').checked,
+                    salesforce: document.getElementById('newSalesforce').checked,
+                    confluence: document.getElementById('newConfluence').checked,
+                    sharePoint: document.getElementById('newSharePoint').checked,
+                    other: document.getElementById('newOther').checked
+                },
+                lastUpdated: new Date().toISOString()
+            };
+
+            customers.push(newCustomer);
+            saveData();
+            renderTable();
+            renderStats();
+            closeModal();
+
+            // Clear form
+            document.getElementById('newCustomerName').value = '';
+            document.getElementById('newLicenses').value = '';
+            document.getElementById('newActiveUsers').value = '';
+            document.getElementById('newOOBAgents').value = '';
+            document.getElementById('newCustomAgents').value = '';
+            document.querySelectorAll('.connector-checkbox input').forEach(cb => cb.checked = false);
+        }
+
+        function deleteCustomer(customerId) {
+            if (confirm('Are you sure you want to delete this customer?')) {
+                customers = customers.filter(c => c.id !== customerId);
+                saveData();
+                renderTable();
+                renderStats();
+            }
+        }
+
+        function exportData() {
+            const dataStr = JSON.stringify(customers, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `copilot-customers-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+        }
+
+        function importData() {
+            document.getElementById('importFile').click();
+        }
+
+        function handleImport(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        customers = JSON.parse(e.target.result);
+                        saveData();
+                        renderTable();
+                        renderStats();
+                        alert('Data imported successfully!');
+                    } catch (error) {
+                        alert('Error importing data. Please check the file format.');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        // Initialize on load
+        initializeData();
+    </script>
+</body>
+</html>
